@@ -14,10 +14,161 @@ const block = {
 
 let score = 0;
 let lasers = [];
+let shots = [];
 
 
 const asteroids = [];
 const particles = [];
+
+const ufos = [];
+
+const ufoTemplate = {
+    x: 0,
+    y: 0,
+    width: 40,
+    height: 20,
+    speed: 3,
+};
+
+function drawUFO(ufo) {
+    // Draw the main body
+    ctx.beginPath();
+    ctx.ellipse(ufo.x + ufo.width / 2, ufo.y + ufo.height / 2, ufo.width / 2, ufo.height / 2, 0, 0, 2 * Math.PI);
+    ctx.fillStyle = 'green';
+    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.stroke();
+
+    // Draw the dome
+    ctx.beginPath();
+    ctx.ellipse(ufo.x + ufo.width / 2, ufo.y + ufo.height / 4, ufo.width / 3, ufo.height / 4, 0, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.stroke();
+
+    // Draw lights
+    const lightColors = ['red', 'yellow', 'blue'];
+    const lightRadius = 3;
+    const lightSpacing = ufo.width / (lightColors.length + 1);
+
+    for (let i = 0; i < lightColors.length; i++) {
+        ctx.beginPath();
+        ctx.arc(ufo.x + lightSpacing * (i + 1), ufo.y + ufo.height, lightRadius, 0, 2 * Math.PI);
+        ctx.fillStyle = lightColors[i];
+        ctx.fill();
+    }
+}
+
+function spawnUFO() {
+    const shouldSpawnUFO = Math.random() * 1750 < difficulty() && difficulty() > 9;
+
+    if (shouldSpawnUFO) {
+        const newUfo = Object.assign({}, ufoTemplate);
+        newUfo.x = Math.random() * (canvas.width - newUfo.width);
+        newUfo.y = -newUfo.height;
+        newUfo.speed = 1 + Math.random() * Math.sqrt(difficulty());
+        ufos.push(newUfo);
+    }
+}
+
+function moveUfo(ufo) {
+    if (!ufo.hasOwnProperty('direction')) {
+        ufo.direction = Math.random() * Math.PI * 2;
+    }
+
+    ufo.x += ufo.speed * Math.cos(ufo.direction);
+    ufo.y += ufo.speed * Math.sin(ufo.direction);
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    if (
+        (ufo.x < 0 && Math.cos(ufo.direction) < 0 && ufo.x < centerX) ||
+        (ufo.x + ufo.width > canvas.width && Math.cos(ufo.direction) > 0 && ufo.x > centerX)
+    ) {
+        ufo.direction = Math.PI - ufo.direction;
+    }
+
+    if (
+        (ufo.y < 0 && Math.sin(ufo.direction) < 0 && ufo.y < centerY) ||
+        (ufo.y + ufo.height > canvas.height && Math.sin(ufo.direction) > 0 && ufo.y > centerY)
+    ) {
+        ufo.direction = -ufo.direction;
+    }
+}
+
+function updateShots() {
+    for (let i = 0; i < shots.length; i++) {
+        shots[i].x += shots[i].speed * shots[i].direction.x;
+        shots[i].y += shots[i].speed * shots[i].direction.y;
+
+        // Check for collision with the player
+        if (checkCollision(block, shots[i])) {
+            alert(`Game Over! Your score: ${score}`);
+            location.reload();
+        }
+
+        // Remove the shot if it's out of the canvas
+        if (shots[i].y > canvas.height || shots[i].y < 0 || shots[i].x < 0 || shots[i].x > canvas.width) {
+            shots.splice(i, 1);
+            i--; // Adjust the index after removing the shot
+        }
+    }
+}
+
+
+function updateUFOs(ufosToRemove) {
+    if (difficulty() <= 9) {
+        return;
+    }
+
+
+    for (let i = 0; i < ufos.length; i++) {
+        moveUfo(ufos[i]);
+
+        // UFO shooting logic
+        if (Math.random() < 0.001 * difficulty() && ufos[i].y < canvas.height / 2) {
+            const dx = block.x - (ufos[i].x + ufos[i].width / 2);
+            const dy = block.y - (ufos[i].y + ufos[i].height);
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const shot = {
+                x: ufos[i].x + ufos[i].width / 2,
+                y: ufos[i].y + ufos[i].height,
+                width: 2,
+                height: 10,
+                speed: 5,
+                direction: {
+                    x: dx / distance,
+                    y: dy / distance,
+                },
+            };
+            shots.push(shot);
+        }
+
+        let ufoDestroyed = false;
+        for (let j = 0; j < lasers.length; j++) {
+            if (lasers[j] && checkCollision(lasers[j], ufos[i])) {
+                createExplosion(
+                    ufos[i].x + ufos[i].width / 2,
+                    ufos[i].y + ufos[i].height / 2,
+                    ufos[i].width * 2
+                );
+                ufosToRemove.push(i);
+                lasers.splice(j, 1);
+                score += 35;
+                ufoDestroyed = true;
+                break;
+            }
+        }
+
+        if (!ufoDestroyed && checkCollision(block, ufos[i])) {
+            alert(`Game Over! Your score: ${score}`);
+            location.reload();
+        }
+    }
+}
+
 
 function createExplosion(x, y, size) {
     const numParticles = Math.floor(size / 2);
@@ -32,7 +183,6 @@ function createExplosion(x, y, size) {
         });
     }
 }
-
 
 function handleMove() {
     if (block.movingLeft) {
@@ -108,7 +258,7 @@ function difficulty() {
 }
 
 function spawnAsteroid() {
-    const shouldSpawnAsteroid = Math.random() * 100 < difficulty();
+    const shouldSpawnAsteroid = Math.random() * 100 < difficulty() && difficulty() <= 9;
 
     if (shouldSpawnAsteroid) {
         const size = 20 + Math.random() * 40 + difficulty();
@@ -184,7 +334,7 @@ function updateAsteroids(asteroidsToRemove) {
 
         let asteroidDestroyed = false;
         for (let j = 0; j < lasers.length; j++) {
-            if (lasers[j] && checkCollision(lasers[j], asteroids[i], true)) {
+            if (lasers[j] && checkCollision(lasers[j], asteroids[i])) {
                 createExplosion(
                     asteroids[i].x + asteroids[i].size / 2,
                     asteroids[i].y + asteroids[i].size / 2,
@@ -204,15 +354,29 @@ function updateAsteroids(asteroidsToRemove) {
     }
 }
 
+function drawUfos() {
+    for (const ufo of ufos) {
+        drawUFO(ufo);
+    }
+}
+
 function update() {
     handleInput();
     updatePlayer();
     spawnAsteroid();
+    spawnUFO();
 
     // Create an array to store the indices of the asteroids to be removed
     const asteroidsToRemove = [];
+    const ufosToRemove = [];
     updateParticles();
     updateAsteroids(asteroidsToRemove);
+    updateUFOs(ufosToRemove);
+    updateShots();
+
+    for (let i = ufosToRemove.length - 1; i >= 0; i--) {
+        ufos.splice(ufosToRemove[i], 1);
+    }
 
     // Remove asteroids marked for removal, starting from the end of the array
     for (let i = asteroidsToRemove.length - 1; i >= 0; i--) {
@@ -291,28 +455,41 @@ function drawAsteroid(asteroid) {
 }
 
 
-function checkCollision(rect, asteroid, laser = false) {
+function checkCollision(rect, object) {
+    let objectPolygon;
 
-    const asteroidPolygon = asteroid.rotatedShape;
+    if (object.hasOwnProperty("rotatedShape")) { // Asteroid
+        objectPolygon = object.rotatedShape;
+    } else if (object.hasOwnProperty("width") && object.hasOwnProperty("height")) { // UFO
+        objectPolygon = [
+            {x: object.x, y: object.y},
+            {x: object.x + object.width, y: object.y},
+            {x: object.x + object.width, y: object.y + object.height},
+            {x: object.x, y: object.y + object.height},
+        ];
+    } else {
+        return false; // Unknown object type
+    }
 
-
-    if (laser) {
+    if (rect.hasOwnProperty("width") && rect.hasOwnProperty("height")) { // Laser
         const laserPolygon = [
             {x: rect.x, y: rect.y},
             {x: rect.x + rect.width, y: rect.y},
             {x: rect.x + rect.width, y: rect.y + rect.height},
             {x: rect.x, y: rect.y + rect.height},
         ];
-        return checkPolygonCollision(laserPolygon, asteroidPolygon);
-    } else {
+        return checkPolygonCollision(laserPolygon, objectPolygon);
+    } else if (rect.hasOwnProperty("size")) { // Spaceship
         const spaceshipPolygon = [
             {x: rect.x, y: rect.y},
-            {x: rect.x + rect.size / 2, y: rect.y - rect.size},
-            {x: rect.x + rect.size, y: rect.y},
+            {x: rect.x + rect.size / 2, y: rect.y - rect.size}, {x: rect.x + rect.size, y: rect.y},
         ];
-        return checkPolygonCollision(spaceshipPolygon, asteroidPolygon);
+        return checkPolygonCollision(spaceshipPolygon, objectPolygon);
+    } else {
+        return false; // Unknown rect type
     }
 }
+
 
 function createAsteroidGradient(ctx, size) {
     const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size);
@@ -372,23 +549,41 @@ function drawParticles() {
 }
 
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    drawSpaceship(block.x, block.y, block.size, block.size);
-    drawParticles()
+function drawLasers() {
     for (const laser of lasers) {
         ctx.fillStyle = 'green';
         ctx.fillRect(laser.x, laser.y, laser.width, laser.height);
     }
+}
+
+function drawAsteroids() {
     for (const asteroid of asteroids) {
         drawAsteroid(asteroid);
     }
+}
+
+function drawShots() {
+    for (let i = 0; i < shots.length; i++) {
+        // Draw the shot
+        ctx.fillStyle = 'red';
+        ctx.fillRect(shots[i].x, shots[i].y, shots[i].width, shots[i].height);
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawSpaceship(block.x, block.y, block.size, block.size);
+    drawParticles();
+    drawShots();
+    drawLasers();
+    drawUfos();
+    drawAsteroids();
 
     ctx.font = '20px Arial';
     ctx.fillStyle = 'white';
-    ctx.fillText(`Level: ${Math.floor(difficulty())}`, 10, 50);
     ctx.fillText(`Score: ${score}`, 10, 30);
+    ctx.fillText(`Level: ${Math.floor(difficulty())}`, 10, 55);
 }
 
 function createAsteroidShape(size, variance) {
