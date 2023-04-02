@@ -15,7 +15,8 @@ const block = {
 let score = 0;
 let lasers = [];
 let shots = [];
-
+let thrusterGlowIntensity = 1;
+let intensityChange = 0.05;
 
 const asteroids = [];
 const particles = [];
@@ -34,6 +35,18 @@ const numStars = 100;
 const minStarSize = 1;
 const maxStarSize = 3;
 const stars = generateStars(numStars, minStarSize, maxStarSize);
+
+function updateThrusterGlowIntensity() {
+    const minIntensity = 0.6;
+    const maxIntensity = 1.0;
+
+
+    if (thrusterGlowIntensity >= maxIntensity || thrusterGlowIntensity <= minIntensity) {
+        intensityChange = -intensityChange;
+    }
+    thrusterGlowIntensity += intensityChange;
+}
+
 
 function updateStars() {
     for (let i = 0; i < stars.length; i++) {
@@ -209,7 +222,7 @@ function createExplosion(x, y, size) {
             size: Math.random() * 3 + 1,
             speed: Math.random() * 3 + 1,
             angle: Math.random() * Math.PI * 2,
-            life: 1,
+            life: 0.5+Math.random(),
         });
     }
 }
@@ -399,12 +412,27 @@ function drawStars() {
     }
 }
 
-function checkRectCollision(rect1, rect2) {
+function checkRectCollision(rect1, rect2, tolerance = 1) {
+
+    const expandedRect1 = {
+        x: rect1.x - (rect1.width * (tolerance - 1)) / 2,
+        y: rect1.y - (rect1.height * (tolerance - 1)) / 2,
+        width: rect1.width * tolerance,
+        height: rect1.height * tolerance,
+    };
+
+    const expandedRect2 = {
+        x: rect2.x - (rect2.width * (tolerance - 1)) / 2,
+        y: rect2.y - (rect2.height * (tolerance - 1)) / 2,
+        width: rect2.width * tolerance,
+        height: rect2.height * tolerance,
+    };
+
     return (
-        rect1.x < rect2.x + rect2.width &&
-        rect1.x + rect1.width > rect2.x &&
-        rect1.y < rect2.y + rect2.height &&
-        rect1.y + rect1.height > rect2.y
+        expandedRect1.x < expandedRect2.x + expandedRect2.width &&
+        expandedRect1.x + expandedRect1.width > expandedRect2.x &&
+        expandedRect1.y < expandedRect2.y + expandedRect2.height &&
+        expandedRect1.y + expandedRect1.height > expandedRect2.y
     );
 }
 
@@ -412,7 +440,7 @@ function checkRectCollision(rect1, rect2) {
 function checkLasersShotsCollision() {
     for (let i = 0; i < lasers.length; i++) {
         for (let j = 0; j < shots.length; j++) {
-            if (lasers[i] && shots[j] && checkRectCollision(lasers[i], shots[j])) {
+            if (lasers[i] && shots[j] && checkRectCollision(lasers[i], shots[j], 2)) {
                 createExplosion(
                     lasers[i].x + lasers[i].width / 2,
                     lasers[i].y + lasers[i].height / 2,
@@ -433,6 +461,7 @@ function update() {
     spawnUFO();
     updateStars();
     checkLasersShotsCollision();
+    updateThrusterGlowIntensity();
 
     // Create an array to store the indices of the asteroids to be removed
     const asteroidsToRemove = [];
@@ -511,6 +540,11 @@ function drawAsteroid(asteroid) {
     ctx.fillStyle = createAsteroidGradient(ctx, asteroid.size);
     ctx.fill();
 
+    // Draw the darker outline
+    ctx.strokeStyle = '#404040';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
     for (const crater of asteroid.craters) {
         const x = asteroid.x + asteroid.size / 2 + Math.cos(crater.angle + asteroid.rotation) * crater.distanceFromCenter - crater.size / 2;
         const y = asteroid.y + asteroid.size / 2 + Math.sin(crater.angle + asteroid.rotation) * crater.distanceFromCenter - crater.size / 2;
@@ -521,7 +555,6 @@ function drawAsteroid(asteroid) {
         ctx.fill();
     }
 }
-
 
 function checkCollision(rect, object) {
     let objectPolygon;
@@ -561,7 +594,7 @@ function checkCollision(rect, object) {
 
 function createAsteroidGradient(ctx, size) {
     const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size);
-    gradient.addColorStop(0, '#606060');
+    gradient.addColorStop(0, '#505050');
     gradient.addColorStop(1, 'gray');
     return gradient;
 }
@@ -599,15 +632,20 @@ function drawSpaceship(x, y, width, height) {
     ctx.closePath();
     ctx.fillStyle = 'rgba(200, 200, 200, 0.8)';
     ctx.fill();
+
     // Engine exhaust
+    ctx.save();
+    ctx.translate(x + width / 2, y);
+    let gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, height);
+    gradient.addColorStop(0, `rgba(255, 100, 0, ${thrusterGlowIntensity})`);
+    gradient.addColorStop(1, 'transparent');
     ctx.beginPath();
-    ctx.moveTo(x + width / 4, y);
-    ctx.lineTo(x + width / 2, y + height / 2);
-    ctx.lineTo(x + width * 3 / 4, y);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(255, 100, 0, 0.8)';
+    ctx.arc(0, 0, height, 0, Math.PI, false);
+    ctx.fillStyle = gradient;
     ctx.fill();
+    ctx.restore();
 }
+
 
 function drawParticles() {
     ctx.fillStyle = 'white';
