@@ -9,6 +9,7 @@ const block = {
     movingLeft: false,
     movingRight: false,
     firing: false,
+    firingPellets: false,
 };
 
 let score = 0;
@@ -33,15 +34,17 @@ function createExplosion(x, y, size) {
 }
 
 
-function handleInput() {
+function handleMove() {
     if (block.movingLeft) {
         block.x -= block.speed;
     }
     if (block.movingRight) {
         block.x += block.speed;
     }
+}
 
-    if (block.firing && (lasers.length === 0 || Date.now() - lasers[lasers.length - 1].createdAt > 250)) {
+function handleLaser() {
+    if (block.firing && (lasers.length === 0 || Date.now() - lasers[lasers.length - 1].createdAt > 200)) {
         lasers.push({
             x: block.x + block.size / 2 - 2.5,
             y: block.y - 10,
@@ -52,14 +55,47 @@ function handleInput() {
             createdAt: Date.now()
         });
     }
+}
 
+function handleShotgun() {
+    if (block.firingPellets && (lasers.length === 0 || Date.now() - lasers[lasers.length - 1].createdAt > 2000)) {
+        const pelletCount = Math.floor(Math.random() * 6) + 5;
+        for (let i = 0; i < pelletCount; i++) {
+            const angle = (Math.random() * 0.8) - 0.4;
+            const speed = 7 + (Math.random() * 6);
+            lasers.push({
+                x: block.x + block.size / 2 - 2.5,
+                y: block.y - 10,
+                width: 10,
+                height: 20,
+                speed: speed,
+                size: 5,
+                angle: angle,
+                createdAt: Date.now(),
+                isPellet: true,
+            });
+        }
+    }
+}
+
+function handleLasers() {
     for (let i = 0; i < lasers.length; i++) {
+        if (lasers[i].isPellet) {
+            lasers[i].x += Math.sin(lasers[i].angle) * lasers[i].speed;
+        }
         lasers[i].y -= lasers[i].speed;
         if (lasers[i].y < 0) {
             lasers.splice(i, 1);
             i--;
         }
     }
+}
+
+function handleInput() {
+    handleMove();
+    handleLaser();
+    handleShotgun();
+    handleLasers();
 }
 
 function updatePlayer() {
@@ -76,7 +112,7 @@ function spawnAsteroid() {
 
     if (shouldSpawnAsteroid) {
         const size = 20 + Math.random() * 40 + difficulty();
-        asteroids.push({
+        const asteroid = {
             x: Math.random() * (canvas.width - size),
             y: -size,
             size: size,
@@ -84,9 +120,28 @@ function spawnAsteroid() {
             shape: createAsteroidShape(size, size * 0.4),
             rotation: 0,
             rotationSpeed: (Math.random() * 0.02) - 0.01,
-        });
+            craters: createCraters(size),
+        };
+        asteroids.push(asteroid);
     }
 }
+
+function createCraters(size) {
+    const craterCount = 2 + Math.floor(Math.random() * (size / 10));
+    const craters = [];
+    for (let i = 0; i < craterCount; i++) {
+        const craterSize = Math.random() * (size * 0.3) + size * 0.15;
+        const angle = Math.random() * Math.PI * 2;
+        const distanceFromCenter = Math.random() * (size * 0.3) + size * 0.3;
+        craters.push({
+            size: craterSize,
+            angle: angle,
+            distanceFromCenter: distanceFromCenter,
+        });
+    }
+    return craters;
+}
+
 
 function updateParticles() {
     for (let i = 0; i < particles.length; i++) {
@@ -221,8 +276,18 @@ function drawAsteroid(asteroid) {
     }
 
     ctx.closePath();
-    ctx.fillStyle = 'gray';
+    ctx.fillStyle = createAsteroidGradient(ctx, asteroid.size);
     ctx.fill();
+
+    for (const crater of asteroid.craters) {
+        const x = asteroid.x + asteroid.size / 2 + Math.cos(crater.angle + asteroid.rotation) * crater.distanceFromCenter - crater.size / 2;
+        const y = asteroid.y + asteroid.size / 2 + Math.sin(crater.angle + asteroid.rotation) * crater.distanceFromCenter - crater.size / 2;
+
+        ctx.beginPath();
+        ctx.arc(x, y, crater.size / 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(50, 50, 50, 0.5)';
+        ctx.fill();
+    }
 }
 
 
@@ -249,14 +314,53 @@ function checkCollision(rect, asteroid, laser = false) {
     }
 }
 
+function createAsteroidGradient(ctx, size) {
+    const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size);
+    gradient.addColorStop(0, '#606060');
+    gradient.addColorStop(1, 'gray');
+    return gradient;
+}
+
 
 function drawSpaceship(x, y, width, height) {
+    // Main body
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(x + width / 2, y - height);
     ctx.lineTo(x + width, y);
     ctx.closePath();
     ctx.fillStyle = 'white';
+    ctx.fill();
+
+    // Cockpit
+    ctx.beginPath();
+    ctx.arc(x + width / 2, y - height / 2, height / 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
+    ctx.fill();
+
+    // Wings
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - width / 2, y + height / 2);
+    ctx.lineTo(x + width / 2, y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(200, 200, 200, 0.8)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(x + width, y);
+    ctx.lineTo(x + width * 1.5, y + height / 2);
+    ctx.lineTo(x + width / 2, y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(200, 200, 200, 0.8)';
+    ctx.fill();
+    // Engine exhaust
+    ctx.beginPath();
+    ctx.moveTo(x + width / 4, y);
+    ctx.lineTo(x + width / 2, y + height / 2);
+    ctx.lineTo(x + width * 3 / 4, y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 100, 0, 0.8)';
     ctx.fill();
 }
 
@@ -317,6 +421,8 @@ document.addEventListener('keydown', (e) => {
         block.movingRight = true;
     } else if (e.key === ' ') {
         block.firing = true;
+    } else if (e.key === 'Control') {
+        block.firingPellets = true;
     }
 });
 
@@ -327,6 +433,8 @@ document.addEventListener('keyup', (e) => {
         block.movingRight = false;
     } else if (e.key === ' ') {
         block.firing = false;
+    } else if (e.key === 'Control') {
+        block.firingPellets = false;
     }
 });
 
