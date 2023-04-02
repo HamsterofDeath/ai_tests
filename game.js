@@ -12,36 +12,53 @@ const block = {
 };
 
 let score = 0;
-let laser = null;
+let lasers = [];
 
 
 const asteroids = [];
-const asteroidFrequency = 60;
+const particles = [];
+
+function createExplosion(x, y, size) {
+    const numParticles = Math.floor(size / 2);
+    for (let i = 0; i < numParticles; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            size: Math.random() * 3 + 1,
+            speed: Math.random() * 3 + 1,
+            angle: Math.random() * Math.PI * 2,
+            life: 1,
+        });
+    }
+}
+
 
 function handleInput() {
     if (block.movingLeft) {
         block.x -= block.speed;
-        if (laser && laser.y === block.y - 10) laser.x -= block.speed;
     }
     if (block.movingRight) {
         block.x += block.speed;
-        if (laser && laser.y === block.y - 10) laser.x += block.speed;
     }
 
-    if (block.firing && !laser) {
-        laser = {
+    if (block.firing && (lasers.length === 0 || Date.now() - lasers[lasers.length - 1].createdAt > 250)) {
+        lasers.push({
             x: block.x + block.size / 2 - 2.5,
             y: block.y - 10,
             width: 10,
             height: 20,
             speed: 10,
             size: 5,
-        };
+            createdAt: Date.now()
+        });
     }
 
-    if (laser) {
-        laser.y -= laser.speed;
-        if (laser.y < 0) laser = null;
+    for (let i = 0; i < lasers.length; i++) {
+        lasers[i].y -= lasers[i].speed;
+        if (lasers[i].y < 0) {
+            lasers.splice(i, 1);
+            i--;
+        }
     }
 }
 
@@ -52,8 +69,9 @@ function update() {
     if (block.x + block.size > canvas.width) block.x = canvas.width - block.size;
 
     const difficulty = Math.min(1 + score / 100, 5);
+    const shouldSpawnAsteroid = Math.random() * 100 < difficulty;
 
-    if (asteroids.length < 1 || asteroids[asteroids.length - 1].y > asteroidFrequency / difficulty) {
+    if (shouldSpawnAsteroid) {
         const size = 20 + Math.random() * 40 + difficulty;
         asteroids.push({
             x: Math.random() * (canvas.width - size),
@@ -66,6 +84,19 @@ function update() {
         });
     }
 
+    // Create an array to store the indices of the asteroids to be removed
+    const asteroidsToRemove = [];
+
+    for (let i = 0; i < particles.length; i++) {
+        particles[i].x += Math.cos(particles[i].angle) * particles[i].speed;
+        particles[i].y += Math.sin(particles[i].angle) * particles[i].speed;
+        particles[i].life -= 0.01;
+
+        if (particles[i].life <= 0) {
+            particles.splice(i, 1);
+            i--;
+        }
+    }
     for (let i = 0; i < asteroids.length; i++) {
         asteroids[i].y += asteroids[i].speed;
         asteroids[i].rotation += asteroids[i].rotationSpeed;
@@ -85,23 +116,35 @@ function update() {
                 asteroids[i].rotation
             )
         );
+
         if (asteroids[i].y - asteroids[i].size > canvas.height + 100) {
-            asteroids.shift();
+            asteroidsToRemove.push(i);
             score++;
         }
 
-        if (laser && checkCollision(laser, asteroids[i], true)) {
-            asteroids.splice(i, 1);
-            laser = null;
-            score += 10;
-            continue;
+        let asteroidDestroyed = false;
+        for (let j = 0; j < lasers.length; j++) {
+            if (lasers[j] && checkCollision(lasers[j], asteroids[i], true)) {
+                createExplosion(
+                    asteroids[i].x + asteroids[i].size / 2,
+                    asteroids[i].y + asteroids[i].size / 2,
+                    asteroids[i].size * 3
+                );
+                asteroidsToRemove.push(i);
+                lasers.splice(j, 1);
+                score += 10;
+                asteroidDestroyed = true;
+                break;
+            }
         }
-
-
-        if (checkCollision(block, asteroids[i])) {
+        if (!asteroidDestroyed && checkCollision(block, asteroids[i])) {
             alert(`Game Over! Your score: ${score}`);
             location.reload();
         }
+    }
+// Remove asteroids marked for removal, starting from the end of the array
+    for (let i = asteroidsToRemove.length - 1; i >= 0; i--) {
+        asteroids.splice(asteroidsToRemove[i], 1);
     }
 }
 
@@ -168,17 +211,6 @@ function drawAsteroid(asteroid) {
 
 
 function checkCollision(rect, asteroid, laser = false) {
-    const rectPolygon = [
-        {x: rect.x, y: rect.y},
-        {x: rect.x + rect.width, y: rect.y},
-        {x: rect.x + rect.width, y: rect.y + rect.height},
-        {x: rect.x, y: rect.y + rect.height},
-    ];
-
-    const asteroidCenter = {
-        x: asteroid.x + asteroid.size / 2,
-        y: asteroid.y + asteroid.size / 2,
-    };
 
     const asteroidPolygon = asteroid.rotatedShape;
 
@@ -212,16 +244,23 @@ function drawSpaceship(x, y, width, height) {
     ctx.fill();
 }
 
+function drawParticles() {
+    ctx.fillStyle = 'white';
+    for (const particle of particles) {
+        ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+    }
+}
+
+
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawSpaceship(block.x, block.y, block.size, block.size);
-
-    if (laser) {
+    drawParticles()
+    for (const laser of lasers) {
         ctx.fillStyle = 'green';
         ctx.fillRect(laser.x, laser.y, laser.width, laser.height);
     }
-
     for (const asteroid of asteroids) {
         drawAsteroid(asteroid);
     }
