@@ -30,6 +30,22 @@ const ufoTemplate = {
     speed: 3,
 };
 
+const numStars = 100;
+const minStarSize = 1;
+const maxStarSize = 3;
+const stars = generateStars(numStars, minStarSize, maxStarSize);
+
+function updateStars() {
+    for (let i = 0; i < stars.length; i++) {
+        stars[i].y += stars[i].speed;
+        if (stars[i].y > canvas.height) {
+            stars[i].y = -maxStarSize;
+            stars[i].x = Math.random() * canvas.width;
+        }
+    }
+}
+
+
 function drawUFO(ufo) {
     // Draw the main body
     ctx.beginPath();
@@ -71,6 +87,20 @@ function spawnUFO() {
         ufos.push(newUfo);
     }
 }
+
+function generateStars(numStars, minSize, maxSize) {
+    const stars = [];
+    for (let i = 0; i < numStars; i++) {
+        stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: minSize + Math.random() * (maxSize - minSize),
+            speed: 1 + Math.random() * 3,
+        });
+    }
+    return stars;
+}
+
 
 function moveUfo(ufo) {
     if (!ufo.hasOwnProperty('direction')) {
@@ -360,11 +390,49 @@ function drawUfos() {
     }
 }
 
+function drawStars() {
+    ctx.fillStyle = 'white';
+    for (let i = 0; i < stars.length; i++) {
+        ctx.beginPath();
+        ctx.arc(stars[i].x, stars[i].y, stars[i].size, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+}
+
+function checkRectCollision(rect1, rect2) {
+    return (
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y
+    );
+}
+
+
+function checkLasersShotsCollision() {
+    for (let i = 0; i < lasers.length; i++) {
+        for (let j = 0; j < shots.length; j++) {
+            if (lasers[i] && shots[j] && checkRectCollision(lasers[i], shots[j])) {
+                createExplosion(
+                    lasers[i].x + lasers[i].width / 2,
+                    lasers[i].y + lasers[i].height / 2,
+                    Math.max(lasers[i].width, lasers[i].height) * 2
+                );
+                lasers.splice(i, 1);
+                shots.splice(j, 1);
+                break;
+            }
+        }
+    }
+}
+
 function update() {
     handleInput();
     updatePlayer();
     spawnAsteroid();
     spawnUFO();
+    updateStars();
+    checkLasersShotsCollision();
 
     // Create an array to store the indices of the asteroids to be removed
     const asteroidsToRemove = [];
@@ -573,6 +641,7 @@ function drawShots() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    drawStars();
     drawSpaceship(block.x, block.y, block.size, block.size);
     drawParticles();
     drawShots();
