@@ -62,31 +62,33 @@ function handleInput() {
     }
 }
 
-function update() {
-    handleInput();
-
+function updatePlayer() {
     if (block.x < 0) block.x = 0;
     if (block.x + block.size > canvas.width) block.x = canvas.width - block.size;
+}
 
-    const difficulty = Math.min(1 + score / 100, 5);
-    const shouldSpawnAsteroid = Math.random() * 100 < difficulty;
+function difficulty() {
+    return 1 + score / 175;
+}
+
+function spawnAsteroid() {
+    const shouldSpawnAsteroid = Math.random() * 100 < difficulty();
 
     if (shouldSpawnAsteroid) {
-        const size = 20 + Math.random() * 40 + difficulty;
+        const size = 20 + Math.random() * 40 + difficulty();
         asteroids.push({
             x: Math.random() * (canvas.width - size),
             y: -size,
             size: size,
-            speed: 1 + Math.random() * difficulty,
+            speed: 1 + Math.random() * difficulty(),
             shape: createAsteroidShape(size, size * 0.4),
             rotation: 0,
             rotationSpeed: (Math.random() * 0.02) - 0.01,
         });
     }
+}
 
-    // Create an array to store the indices of the asteroids to be removed
-    const asteroidsToRemove = [];
-
+function updateParticles() {
     for (let i = 0; i < particles.length; i++) {
         particles[i].x += Math.cos(particles[i].angle) * particles[i].speed;
         particles[i].y += Math.sin(particles[i].angle) * particles[i].speed;
@@ -97,6 +99,9 @@ function update() {
             i--;
         }
     }
+}
+
+function updateAsteroids(asteroidsToRemove) {
     for (let i = 0; i < asteroids.length; i++) {
         asteroids[i].y += asteroids[i].speed;
         asteroids[i].rotation += asteroids[i].rotationSpeed;
@@ -142,7 +147,19 @@ function update() {
             location.reload();
         }
     }
-// Remove asteroids marked for removal, starting from the end of the array
+}
+
+function update() {
+    handleInput();
+    updatePlayer();
+    spawnAsteroid();
+
+    // Create an array to store the indices of the asteroids to be removed
+    const asteroidsToRemove = [];
+    updateParticles();
+    updateAsteroids(asteroidsToRemove);
+
+    // Remove asteroids marked for removal, starting from the end of the array
     for (let i = asteroidsToRemove.length - 1; i >= 0; i--) {
         asteroids.splice(asteroidsToRemove[i], 1);
     }
@@ -195,7 +212,6 @@ function checkPolygonCollision(polygon1, polygon2) {
     return true;
 }
 
-
 function drawAsteroid(asteroid) {
     ctx.beginPath();
     ctx.moveTo(asteroid.rotatedShape[0].x, asteroid.rotatedShape[0].y);
@@ -205,7 +221,7 @@ function drawAsteroid(asteroid) {
     }
 
     ctx.closePath();
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = 'gray';
     ctx.fill();
 }
 
@@ -267,6 +283,7 @@ function draw() {
 
     ctx.font = '20px Arial';
     ctx.fillStyle = 'white';
+    ctx.fillText(`Level: ${Math.floor(difficulty())}`, 10, 50);
     ctx.fillText(`Score: ${score}`, 10, 30);
 }
 
