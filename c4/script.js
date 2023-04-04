@@ -192,7 +192,7 @@ function renderBoard() {
     boardElement.innerHTML = html;
 }
 
-boardElement.addEventListener("click", (event) => {
+boardElement.addEventListener("click", async (event) => {
     const col = parseInt(event.target.dataset.col);
 
     if (isNaN(col) || board[0][col]) return;
@@ -209,18 +209,24 @@ boardElement.addEventListener("click", (event) => {
         return;
     }
 
-    const aiCol = getBestMove();
-    const aiRow = placePiece(aiCol, "2");
-    renderBoard();
+    showWaitingDialog();
 
-    if (checkWin(aiRow, aiCol)) {
-        showPopup("Player 2 (AI) wins!");
-        return;
-    }
+    setTimeout(() => {
+        const aiCol = getBestMove();
+        hideWaitingDialog();
 
-    if (checkDraw()) {
-        showPopup("It's a draw!");
-    }
+        const aiRow = placePiece(aiCol, "2");
+        renderBoard();
+
+        if (checkWin(aiRow, aiCol)) {
+            showPopup("Player 2 (AI) wins!");
+            return;
+        }
+
+        if (checkDraw()) {
+            showPopup("It's a draw!");
+        }
+    }, 100);
 });
 
 
@@ -229,6 +235,18 @@ document.getElementById('popup-close').addEventListener('click', () => {
     board = new Array(rows).fill(null).map(() => new Array(columns).fill(null));
     renderBoard();
 });
+
+function showWaitingDialog() {
+    const waitingDialog = document.getElementById("waiting-dialog");
+    waitingDialog.style.visibility = "visible";
+    waitingDialog.style.opacity = "1";
+}
+
+function hideWaitingDialog() {
+    const waitingDialog = document.getElementById("waiting-dialog");
+    waitingDialog.style.visibility = "hidden";
+    waitingDialog.style.opacity = "0";
+}
 
 function showPopup(message) {
     const popup = document.getElementById('popup');

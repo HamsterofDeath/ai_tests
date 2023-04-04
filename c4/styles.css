@@ -45,7 +45,9 @@ body {
 .hidden {
     visibility: hidden;
     opacity: 0;
+    display: none;
 }
+
 
 #popup {
     position: absolute;
@@ -73,4 +75,24 @@ body {
     padding: 10px 20px;
     cursor: pointer;
     color: black;
+}
+
+.waiting-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 1;
+    visibility: visible;
+}
+
+.waiting-dialog-hidden {
+    visibility: hidden;
+    opacity: 0;
 }
