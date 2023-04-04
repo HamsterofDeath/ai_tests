@@ -3,10 +3,10 @@ const rows = 6;
 const columns = 7;
 let board = new Array(rows).fill(null).map(() => new Array(columns).fill(null));
 
-function placePiece(column, player) {
+function placePiece(col, player) {
     for (let row = rows - 1; row >= 0; row--) {
-        if (!board[row][column]) {
-            board[row][column] = player;
+        if (!board[row][col]) {
+            board[row][col] = player;
             return row;
         }
     }
@@ -58,7 +58,7 @@ function checkDraw() {
 }
 
 function minimax(board, depth, isMaximizingPlayer, alpha, beta) {
-    if (depth === 0) return 0;
+    if (depth === 0) return evaluateBoard(board);
 
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < columns; col++) {
@@ -112,7 +112,7 @@ function minimax(board, depth, isMaximizingPlayer, alpha, beta) {
 function getBestMove() {
     let bestScore = -Infinity;
     let bestColumn = -1;
-    const depth = 4;
+    const depth = 8;
 
     for (let col = 0; col < columns; col++) {
         if (!board[0][col]) {
@@ -124,54 +124,88 @@ function getBestMove() {
                 bestColumn = col;
             }
         }
-
     }
 
     return bestColumn;
 }
 
-function renderBoard() {
-    boardElement.innerHTML = "";
+function evaluateBoard(board) {
+    const directions = [
+        { dr: 0, dc: 1 }, // Horizontal
+        { dr: 1, dc: 1 }, // Diagonal (top-left to bottom-right)
+        { dr: 1, dc: 0 }, // Vertical
+        { dr: 1, dc: -1 } // Diagonal (bottom-left to top-right)
+    ];
+
+    let score = 0;
 
     for (let row = 0; row < rows; row++) {
-        const rowElement = document.createElement("div");
-        rowElement.classList.add("row");
-        rowElement.dataset.row = row;
         for (let col = 0; col < columns; col++) {
-            const cell = document.createElement("div");
-            cell.classList.add("cell");
-            cell.dataset.col = col;
+            if (!board[row][col]) continue;
 
-            if (board[row][col]) {
-                cell.dataset.player = board[row][col];
+            const player = board[row][col];
+            const multiplier = player === "1" ? -1 : 1;
+
+            for (const { dr, dc } of directions) {
+                let consecutivePieces = 0;
+                let openEnds = 0;
+
+                for (let i = 0; i < 4; i++) {
+                    const newRow = row + dr * i;
+                    const newCol = col + dc * i;
+
+                    if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= columns) {
+                        break;
+                    }
+
+                    if (board[newRow][newCol] === player) {
+                        consecutivePieces++;
+                    } else {
+                        if (!board[newRow][newCol]) {
+                            openEnds++;
+                        }
+                        break;
+                    }
+                }
+
+                if (consecutivePieces > 0 && openEnds > 0) {
+                    score += multiplier * (consecutivePieces + openEnds);
+                }
             }
-
-            rowElement.appendChild(cell);
         }
-
-        boardElement.appendChild(rowElement);
     }
+
+    return score;
 }
 
-boardElement.addEventListener("click", event => {
+function renderBoard() {
+    let html = "";
+    for (let col = 0; col < columns; col++) {
+        html += `<div class="column">`;
+        for (let row = 0; row < rows; row++) { // Changed the loop order
+            const cellValue = board[row][col];
+            const cellClass = cellValue ? `player${cellValue}` : "";
+            html += `<div class="cell ${cellClass}" data-row="${row}" data-col="${col}"></div>`;
+        }
+        html += `</div>`;
+    }
+    boardElement.innerHTML = html;
+}
+
+boardElement.addEventListener("click", (event) => {
     const col = parseInt(event.target.dataset.col);
 
     if (isNaN(col) || board[0][col]) return;
 
     const humanRow = placePiece(col, "1");
     renderBoard();
-
     if (checkWin(humanRow, col)) {
-        alert("Player 1 wins!");
-        board = new Array(rows).fill(null).map(() => new Array(columns).fill(null));
-        renderBoard();
+        showPopup("Player 1 wins!");
         return;
     }
 
     if (checkDraw()) {
-        alert("It's a draw!");
-        board = new Array(rows).fill(null).map(() => new Array(columns).fill(null));
-        renderBoard();
+        showPopup("It's a draw!");
         return;
     }
 
@@ -180,19 +214,35 @@ boardElement.addEventListener("click", event => {
     renderBoard();
 
     if (checkWin(aiRow, aiCol)) {
-        alert("Player 2 (AI) wins!");
-        board = new Array(rows).fill(null).map(() => new Array(columns).fill(null));
-        renderBoard();
+        showPopup("Player 2 (AI) wins!");
         return;
     }
 
     if (checkDraw()) {
-        alert("It's a draw!");
-        board = new Array(rows).fill(null).map(() => new Array(columns).fill(null));
-        renderBoard();
-        return;
+        showPopup("It's a draw!");
     }
 });
+
+
+document.getElementById('popup-close').addEventListener('click', () => {
+    hidePopup();
+    board = new Array(rows).fill(null).map(() => new Array(columns).fill(null));
+    renderBoard();
+});
+
+function showPopup(message) {
+    const popup = document.getElementById('popup');
+    const popupMessage = document.getElementById('popup-message');
+
+    popupMessage.textContent = message;
+    popup.classList.remove('hidden');
+}
+
+function hidePopup() {
+    const popup = document.getElementById('popup');
+    popup.classList.add('hidden');
+}
+
 
 renderBoard();
 

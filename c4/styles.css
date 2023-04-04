@@ -3,7 +3,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #f0f0f0;
+    background-color: #2f2f2f;
     margin: 0;
 }
 
@@ -22,10 +22,55 @@ body {
     cursor: pointer;
 }
 
-.cell[data-player="1"] {
+.cell.player1 {
     background-color: red;
+    border-radius: 50%;
 }
 
-.cell[data-player="2"] {
+.cell.player2 {
     background-color: yellow;
+    border-radius: 50%;
+}
+.game-container {
+    position: relative;
+    display: inline-block;
+}
+
+#board {
+    /* Add any styles you want for the game board */
+    border: 1px solid #ccc;
+    background-color: #5a5a5a;
+}
+
+.hidden {
+    visibility: hidden;
+    opacity: 0;
+}
+
+#popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+}
+
+.popup-content {
+    color: white;
+    text-align: center;
+}
+
+#popup-close {
+    margin-top: 10px;
+    background-color: #f1f1f1;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    color: black;
 }
