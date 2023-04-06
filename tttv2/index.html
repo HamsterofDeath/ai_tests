@@ -1,0 +1,194 @@
+<html lang="html">
+<head>
+    <style>
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 300px;
+            height: 300px;
+            margin: auto;
+            border: 2px solid black;
+            gap: 1px;
+        }
+
+        .square {
+            width: 100px;
+            height: 100px;
+            font-size: 72px;
+            text-align: center;
+            line-height: 100px;
+            cursor: pointer;
+            background-color: white;
+        }
+
+        .square:hover {
+            background-color: #eee;
+        }
+
+        #reset {
+            display: block;
+            margin: auto;
+            margin-top: 10px;
+        }
+
+    </style>
+    <title></title>
+</head>
+<body>
+<div id="board">
+    <div class="square" id="0"></div>
+    <div class="square" id="1"></div>
+    <div class="square" id="2"></div>
+    <div class="square" id="3"></div>
+    <div class="square" id="4"></div>
+    <div class="square" id="5"></div>
+    <div class="square" id="6"></div>
+    <div class="square" id="7"></div>
+    <div class="square" id="8"></div>
+</div>
+<button id="reset">Reset</button>
+<script>
+    const board = document.getElementById('board');
+    const resetButton = document.getElementById('reset');
+
+    const X_CLASS = 'x';
+    const O_CLASS = 'o';
+    const WINNING_COMBINATIONS = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+    ];
+
+    let aiTurn = false;
+    let gameOver = false;
+
+    board.addEventListener('click', handleClick);
+    resetButton.addEventListener('click', reset);
+
+    const squares = Array.from(document.querySelectorAll('.square'));
+
+    function handleClick(e) {
+        const square = e.target;
+        if (gameOver || aiTurn || square.classList.contains(X_CLASS) || square.classList.contains(O_CLASS)) {
+            return;
+        }
+        placeMark(square, X_CLASS);
+        square.textContent = 'X';
+        if (checkWin(X_CLASS)) {
+            endGame(false);
+        } else if (checkTie()) {
+            endGame(true);
+        } else {
+            aiTurn = true;
+            setTimeout(aiPlay, 500);
+        }
+    }
+
+    function placeMark(square, markClass) {
+        square.classList.add(markClass);
+    }
+
+    function checkWin(markClass) {
+        return WINNING_COMBINATIONS.some(combination => {
+            return combination.every(index => {
+                return squares[index].classList.contains(markClass);
+            });
+        });
+    }
+
+    function checkTie() {
+        return squares.every(square => {
+            return square.classList.contains(X_CLASS) || square.classList.contains(O_CLASS);
+        });
+    }
+
+    function endGame(isTie) {
+        gameOver = true;
+        setTimeout(() => {
+            if (isTie) {
+                alert('Tie game!');
+            } else {
+                alert('You win!');
+            }
+        }, 500);
+    }
+
+    function reset() {
+        squares.forEach(square => {
+            square.classList.remove(X_CLASS);
+            square.classList.remove(O_CLASS);
+            square.textContent = '';
+        });
+        gameOver = false;
+        aiTurn = false;
+    }
+
+    function minimax(boardState, depth, isMaximizingPlayer) {
+        if (checkWin(X_CLASS)) return -1;
+        if (checkWin(O_CLASS)) return 1;
+        if (checkTie()) return 0;
+
+        if (isMaximizingPlayer) {
+            let bestValue = -Infinity;
+            for (let i = 0; i < squares.length; i++) {
+                if (!squares[i].classList.contains(X_CLASS) && !squares[i].classList.contains(O_CLASS)) {
+                    squares[i].classList.add(O_CLASS);
+                    let value = minimax(squares, depth + 1, false);
+                    squares[i].classList.remove(O_CLASS);
+                    bestValue = Math.max(value, bestValue);
+                }
+            }
+            return bestValue;
+        } else {
+            let bestValue = Infinity;
+            for (let i = 0; i < squares.length; i++) {
+                if (!squares[i].classList.contains(X_CLASS) && !squares[i].classList.contains(O_CLASS)) {
+                    squares[i].classList.add(X_CLASS);
+                    let value = minimax(squares, depth + 1, true);
+                    squares[i].classList.remove(X_CLASS);
+                    bestValue = Math.min(value, bestValue);
+                }
+            }
+            return bestValue;
+        }
+    }
+
+    function aiPlay() {
+        let bestMove = -1;
+        let bestValue = -Infinity;
+
+        for (let i = 0; i < squares.length; i++) {
+            if (!squares[i].classList.contains(X_CLASS) && !squares[i].classList.contains(O_CLASS)) {
+                squares[i].classList.add(O_CLASS);
+                let value = minimax(squares, 0, false);
+                squares[i].classList.remove(O_CLASS);
+
+                if (value > bestValue) {
+                    bestValue = value;
+                    bestMove = i;
+                }
+            }
+        }
+
+        const square = squares[bestMove];
+        placeMark(square, O_CLASS);
+        square.textContent = 'O';
+
+        if (checkWin(O_CLASS)) {
+            endGame(false);
+        } else if (checkTie()) {
+            endGame(true);
+        }
+        aiTurn = false;
+    }
+
+</script>
+</body>
+</html>
+
