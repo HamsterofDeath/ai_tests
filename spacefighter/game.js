@@ -171,14 +171,14 @@ function updateUFOs(ufosToRemove) {
         moveUfo(ufos[i]);
 
         // UFO shooting logic
-        if (Math.random() < 0.002 * difficulty() && ufos[i].y < canvas.height / 2) {
+        if (Math.random() < 0.0025 * difficulty() && ufos[i].y < canvas.height / 4) {
             const dx = block.x - (ufos[i].x + ufos[i].width / 2);
             const dy = block.y - (ufos[i].y + ufos[i].height);
             const distance = Math.sqrt(dx * dx + dy * dy);
             const shot = {
                 x: ufos[i].x + ufos[i].width / 2,
                 y: ufos[i].y + ufos[i].height,
-                width: 2,
+                width: 4,
                 height: 10,
                 speed: 5,
                 direction: {
