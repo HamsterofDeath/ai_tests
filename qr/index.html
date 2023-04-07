@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to QR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        textarea {
+            width: 80%;
+            height: 100px;
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+<h1>Text to QR</h1>
+<textarea id="text-input" placeholder="Enter your text here" onkeyup="generateQRCode()"></textarea>
+<div id="qr-code"></div>
+
+<script>
+    let qrCode = null;
+
+    function calculateQRSize(textLength) {
+        if (textLength <= 50) {
+            return 128;
+        } else if (textLength <= 100) {
+            return 256;
+        } else if (textLength <= 200) {
+            return 384;
+        } else {
+            return 512;
+        }
+    }
+
+    function generateQRCode() {
+        const text = document.getElementById('text-input').value;
+        const qrCodeDiv = document.getElementById('qr-code');
+
+        if (text) {
+            const size = calculateQRSize(text.length);
+
+            if (qrCode) {
+                qrCode.clear();
+            } else {
+                qrCode = new QRCode(qrCodeDiv);
+            }
+
+            qrCodeDiv.innerHTML = "";
+            qrCode = new QRCode(qrCodeDiv, {
+                text: text,
+                width: size,
+                height: size,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } else {
+            qrCodeDiv.innerHTML = '';
+        }
+    }
+</script>
+</body>
+</html>

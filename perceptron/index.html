@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Perceptron Training Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<button onclick="updatePerceptron()" style="position: absolute; z-index: 1;">Update</button>
+<script>
+    const canvasSize = 400;
+
+    function generateDataPoint() {
+        const x = Math.floor(Math.random() * canvasSize);
+        const y = Math.floor(Math.random() * canvasSize);
+        const output = x > 200 ? 1 : -1;
+        return {inputs: [x, y], output};
+    }
+
+    const trainingData = [];
+
+    class Perceptron {
+        constructor() {
+            this.weights = [Math.random() * 2 - 1, Math.random() * 2 - 1];
+            this.bias = 0.1; // Initialize bias to a small positive value
+            this.learningRate = 0.1;
+        }
+
+        train(inputs, target) {
+            const guess = this.guess(inputs);
+            const error = target - guess;
+            for (let i = 0; i < this.weights.length; i++) {
+                this.weights[i] += error * inputs[i] * this.learningRate;
+            }
+            this.bias += error * this.learningRate;
+        }
+
+        guess(inputs) {
+            let sum = this.bias;
+            for (let i = 0; i < this.weights.length; i++) {
+                sum += inputs[i] * this.weights[i];
+            }
+            return sum > 0 ? 1 : -1;
+        }
+    }
+
+    let perceptron;
+
+    function setup() {
+        createCanvas(canvasSize, canvasSize);
+        perceptron = new Perceptron();
+        noLoop();
+        draw();
+    }
+
+    function draw() {
+        background(220);
+
+        // Draw data points and labels
+        for (const data of trainingData) {
+            const x = data.inputs[0];
+            const y = data.inputs[1];
+            const result = perceptron.guess(data.inputs);
+
+            // Determine whether the guess is correct
+            const isCorrectGuess = result === data.output;
+
+            // Use green color for correct guesses and red color for wrong guesses
+            fill(isCorrectGuess ? 0 : 255, isCorrectGuess ? 255 : 0, 0);
+
+            // Use circle for real class 1 and square for real class 0
+            const shape = data.output === 1 ? "circle" : "square";
+            const size = 12; // Set a constant size for both shapes
+
+            // Draw shapes with the correct colors
+            if (shape === "circle") {
+                ellipse(x, y, size);
+            } else {
+                rect(x - size / 2, y - size / 2, size, size);
+            }
+
+            // Reset the fill color to the default black for text
+            fill(0);
+        }
+
+
+// Calculate the slope (m) and y-intercept (b) of the decision boundary
+        const m = -perceptron.weights[0] / perceptron.weights[1];
+        const b = -perceptron.bias / perceptron.weights[1];
+        const x1 = 0;
+        const y1 = m * x1 + b;
+        const x2 = width;
+        const y2 = m * x2 + b;
+        strokeWeight(1); // Set the stroke weight for the decision boundary line
+        stroke(0, 0, 255); // Set the color to blue for the decision boundary line
+        line(x1, y1, x2, y2);
+        // Display the perceptron bias, weights, and decision boundary equation
+        textAlign(RIGHT);
+        textSize(12);
+        strokeWeight(0);
+        fill(0);
+        text(`Bias: ${perceptron.bias.toFixed(2)}`, 380, 20);
+        text(`Weight 1: ${perceptron.weights[0].toFixed(2)}`, 380, 40);
+        text(`Weight 2: ${perceptron.weights[1].toFixed(2)}`, 380, 60);
+        text(`Decision Boundary: y = ${m.toFixed(2)}x + ${b.toFixed(2)}`, 380, 80);
+    }
+
+    function updatePerceptron() {
+        for (let i = 0; i < 25; i++) {
+            const data = generateDataPoint();
+            trainingData.push(data);
+            perceptron.train(data.inputs, data.output);
+        }
+        for (let i = 0; i < 100000; i++) {
+            const data = generateDataPoint();
+            perceptron.train(data.inputs, data.output);
+        }
+        draw();
+    }
+</script>
+</body>
+</html>
+
