@@ -14,7 +14,7 @@ public class MandelbrotGenerator extends JPanel implements Runnable {
     private static final int WIDTH = 800;
     private static final int HEIGHT = 800;
     private static final int MAX_ITERATIONS = 1000;
-    private static final int NUM_THREADS = 8;
+    private static final int NUM_THREADS = 16;
 
     private BufferedImage image;
     private double zoom = 1;
@@ -62,9 +62,12 @@ public class MandelbrotGenerator extends JPanel implements Runnable {
 
     private void generateRow(int y) {
         int[] colors = new int[WIDTH];
+        double xOffset = -0.75;
+        double yOffset = 0.1;
+
         for (int x = 0; x < WIDTH; x++) {
-            double real = (x - WIDTH / 2.0) * 4.0 / (WIDTH * zoom);
-            double imag = (y - HEIGHT / 2.0) * 4.0 / (HEIGHT * zoom);
+            double real = xOffset + (x - WIDTH / 2.0) * 4.0 / (WIDTH * zoom);
+            double imag = yOffset + (y - HEIGHT / 2.0) * 4.0 / (HEIGHT * zoom);
 
             int value = mandelbrot(real, imag);
             int color = value == MAX_ITERATIONS ? 0 : Color.HSBtoRGB(value / 256f, 1, value / (value + 8f));
