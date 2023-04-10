@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 import pyopencl as cl
 
-WIDTH, HEIGHT = 800, 800
+WIDTH, HEIGHT = 1024, 1024
 MAX_ITERATIONS = 1000
 
 kernel_code = """
