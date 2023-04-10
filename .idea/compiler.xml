@@ -5,6 +5,9 @@
       <module name="j" target="19" />
       <module name="j.main" target="19" />
       <module name="j.test" target="19" />
+      <module name="java" target="19" />
+      <module name="java.main" target="19" />
+      <module name="java.test" target="19" />
     </bytecodeTargetLevel>
   </component>
 </project>
