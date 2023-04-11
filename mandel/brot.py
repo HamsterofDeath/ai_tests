@@ -1,13 +1,17 @@
+from scipy.ndimage import gaussian_filter
+
 import numpy as np
 import pygame
 import pyopencl as cl
 
-WIDTH, HEIGHT = 1024, 1024
-MAX_ITERATIONS = 1000
+SIZE = 1024
+WIDTH, HEIGHT = SIZE, SIZE
+MAX_ITERATIONS = 1234
 
-kernel_code = """
-__kernel void mandelbrot(__global int *image, int width, int height, float zoom, int max_iterations,
-                         float offsetX, float offsetY) {
+kernel_code = """#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+
+__kernel void mandelbrot(__global int *image, int width, int height, double zoom, int max_iterations,
+                         double offsetX, double offsetY) {
     int x = get_global_id(0);
     int y = get_global_id(1);
 
@@ -15,30 +19,30 @@ __kernel void mandelbrot(__global int *image, int width, int height, float zoom,
         return;
     }
 
-    float real = (x - width / 2.0f) * 4.0f / (width * zoom) + offsetX;
-    float imag = (y - height / 2.0f) * 4.0f / (height * zoom) + offsetY;
-    float cReal = real;
-    float cImag = imag;
+    double real = (x - width / 2.0) * 4.0 / (width * zoom) + offsetX;
+    double imag = (y - height / 2.0) * 4.0 / (height * zoom) + offsetY;
+    double cReal = real;
+    double cImag = imag;
 
     int value;
     for (value = 0; value < max_iterations; ++value) {
-        float r2 = real * real;
-        float i2 = imag * imag;
-        if (r2 + i2 > 4.0f) {
+        double r2 = real * real;
+        double i2 = imag * imag;
+        if (r2 + i2 > 4.0) {
             break;
         }
 
-        float newReal = r2 - i2 + cReal;
-        float newImag = 2 * real * imag + cImag;
+        double newReal = r2 - i2 + cReal;
+        double newImag = 2 * real * imag + cImag;
 
         real = newReal;
         imag = newImag;
     }
 
-    float color = value == max_iterations ? 0 : value;
+    double color = value == max_iterations ? 0 : value;
     int r = (int)(color / max_iterations * 255);
-    int g = (int)(color / (max_iterations / 2.0f) * 255);
-    int b = (int)(color / (max_iterations / 4.0f) * 255);
+    int g = (int)(color / (max_iterations / 2.0) * 255);
+    int b = (int)(color / (max_iterations / 4.0) * 255);
 
     image[y * width + x] = (r << 16) | (g << 8) | b;
 }
@@ -60,11 +64,11 @@ class MandelbrotGenerator:
         image_cpu = np.empty((self.height, self.width), dtype=np.int32)
 
         global_work_size = (self.width, self.height)
-        local_work_size = (32, 32)
+        local_work_size = (16, 16)
 
         self.mandelbrot_kernel(self.queue, global_work_size, local_work_size, image_gpu, np.int32(self.width),
-                               np.int32(self.height), np.float32(zoom),
-                               np.int32(max_iterations), np.float32(offsetX), np.float32(offsetY))
+                               np.int32(self.height), np.float64(zoom),
+                               np.int32(max_iterations), np.float64(offsetX), np.float64(offsetY))
         cl.enqueue_copy(self.queue, image_cpu, image_gpu)
 
         return image_cpu
@@ -75,7 +79,7 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     zoom = 1.0
-    zoom_speed = 1.01
+    zoom_speed = 1.05
     offsetX = 0.0
     offsetY = 0.0
     move_speed = 0.05
