@@ -6,12 +6,13 @@ import pyopencl as cl
 
 SIZE = 1024
 WIDTH, HEIGHT = SIZE, SIZE
-MAX_ITERATIONS = 1234
+MAX_ITERATIONS = 150
 
 kernel_code = """#pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
-__kernel void mandelbrot(__global int *image, int width, int height, double zoom, int max_iterations,
-                         double offsetX, double offsetY) {
+__kernel void mandelbrot(__global int *image, int width, int height, float zoom, int max_iterations,
+                         float offsetX, float offsetY, int frame) {
+
     int x = get_global_id(0);
     int y = get_global_id(1);
 
@@ -39,10 +40,11 @@ __kernel void mandelbrot(__global int *image, int width, int height, double zoom
         imag = newImag;
     }
 
-    double color = value == max_iterations ? 0 : value;
+    float color_shift = 0.5f * (1.0f + sin((float)frame * 0.01f));
+    float color = value == max_iterations ? 0 : value + color_shift * max_iterations;
     int r = (int)(color / max_iterations * 255);
-    int g = (int)(color / (max_iterations / 2.0) * 255);
-    int b = (int)(color / (max_iterations / 4.0) * 255);
+    int g = (int)(color / (max_iterations / 2.0f) * 255);
+    int b = (int)(color / (max_iterations / 4.0f) * 255);
 
     image[y * width + x] = (r << 16) | (g << 8) | b;
 }
@@ -59,7 +61,7 @@ class MandelbrotGenerator:
         self.prg = cl.Program(self.ctx, kernel_code).build()
         self.mandelbrot_kernel = self.prg.mandelbrot
 
-    def generate_mandelbrot_image(self, zoom, max_iterations, offsetX, offsetY):
+    def generate_mandelbrot_image(self, zoom, max_iterations, offsetX, offsetY, frame):
         image_gpu = cl.Buffer(self.ctx, cl.mem_flags.WRITE_ONLY, self.width * self.height * np.dtype(np.int32).itemsize)
         image_cpu = np.empty((self.height, self.width), dtype=np.int32)
 
@@ -67,14 +69,15 @@ class MandelbrotGenerator:
         local_work_size = (16, 16)
 
         self.mandelbrot_kernel(self.queue, global_work_size, local_work_size, image_gpu, np.int32(self.width),
-                               np.int32(self.height), np.float64(zoom),
-                               np.int32(max_iterations), np.float64(offsetX), np.float64(offsetY))
+                       np.int32(self.height), np.float32(zoom),
+                       np.int32(max_iterations), np.float32(offsetX), np.float32(offsetY), np.int32(frame))
         cl.enqueue_copy(self.queue, image_cpu, image_gpu)
 
         return image_cpu
 
 
 def main():
+    frame = 0
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
@@ -107,7 +110,8 @@ def main():
         if keys[pygame.K_DOWN]:
             zoom /= zoom_speed
 
-        image_cpu = mandelbrot_generator.generate_mandelbrot_image(zoom, MAX_ITERATIONS, offsetX, offsetY)
+        frame+=1
+        image_cpu = mandelbrot_generator.generate_mandelbrot_image(zoom, MAX_ITERATIONS, offsetX, offsetY, frame)
         pygame.surfarray.blit_array(screen, image_cpu)
         pygame.display.flip()
         clock.tick(30)
