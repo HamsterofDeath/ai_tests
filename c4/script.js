@@ -131,10 +131,10 @@ function getBestMove() {
 
 function evaluateBoard(board) {
     const directions = [
-        { dr: 0, dc: 1 }, // Horizontal
-        { dr: 1, dc: 1 }, // Diagonal (top-left to bottom-right)
-        { dr: 1, dc: 0 }, // Vertical
-        { dr: 1, dc: -1 } // Diagonal (bottom-left to top-right)
+        {dr: 0, dc: 1}, // Horizontal
+        {dr: 1, dc: 1}, // Diagonal (top-left to bottom-right)
+        {dr: 1, dc: 0}, // Vertical
+        {dr: 1, dc: -1} // Diagonal (bottom-left to top-right)
     ];
 
     let score = 0;
@@ -146,7 +146,7 @@ function evaluateBoard(board) {
             const player = board[row][col];
             const multiplier = player === "1" ? -1 : 1;
 
-            for (const { dr, dc } of directions) {
+            for (const {dr, dc} of directions) {
                 let consecutivePieces = 0;
                 let openEnds = 0;
 

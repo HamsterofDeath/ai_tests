@@ -222,7 +222,7 @@ function createExplosion(x, y, size) {
             size: Math.random() * 3 + 1,
             speed: Math.random() * 3 + 1,
             angle: Math.random() * Math.PI * 2,
-            life: 0.5+Math.random(),
+            life: 0.5 + Math.random(),
         });
     }
 }

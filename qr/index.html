@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Text to QR</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -26,7 +26,7 @@
 </head>
 <body>
 <h1>Text to QR</h1>
-<textarea id="text-input" placeholder="Enter your text here" onkeyup="generateQRCode()"></textarea>
+<textarea id="text-input" onkeyup="generateQRCode()" placeholder="Enter your text here"></textarea>
 <div id="qr-code"></div>
 
 <script>

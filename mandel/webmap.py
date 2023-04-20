@@ -6,6 +6,7 @@ client = MongoClient("mongodb://localhost:27017")
 db = client.hashmap_db
 hashmap = db.hashmap
 
+
 @app.route('/<key>', methods=['GET'])
 def get_value(key):
     result = hashmap.find_one({"_id": key})
@@ -13,6 +14,7 @@ def get_value(key):
         return jsonify(value=result["value"])
     else:
         return jsonify(error="Key not found"), 404
+
 
 @app.route('/<key>', methods=['PUT'])
 def put_value(key):
@@ -23,6 +25,7 @@ def put_value(key):
     hashmap.update_one({"_id": key}, {"$set": {"value": value}}, upsert=True)
     return jsonify(success=True)
 
+
 @app.route('/<key>', methods=['DELETE'])
 def delete_value(key):
     result = hashmap.delete_one({"_id": key})
@@ -30,6 +33,7 @@ def delete_value(key):
         return jsonify(success=True)
     else:
         return jsonify(error="Key not found"), 404
+
 
 if __name__ == '__main__':
     app.run()

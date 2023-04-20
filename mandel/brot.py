@@ -1,5 +1,3 @@
-from scipy.ndimage import gaussian_filter
-
 import numpy as np
 import pygame
 import pyopencl as cl
@@ -69,8 +67,8 @@ class MandelbrotGenerator:
         local_work_size = (16, 16)
 
         self.mandelbrot_kernel(self.queue, global_work_size, local_work_size, image_gpu, np.int32(self.width),
-                       np.int32(self.height), np.float32(zoom),
-                       np.int32(max_iterations), np.float32(offsetX), np.float32(offsetY), np.int32(frame))
+                               np.int32(self.height), np.float32(zoom),
+                               np.int32(max_iterations), np.float32(offsetX), np.float32(offsetY), np.int32(frame))
         cl.enqueue_copy(self.queue, image_cpu, image_gpu)
 
         return image_cpu
@@ -110,7 +108,7 @@ def main():
         if keys[pygame.K_DOWN]:
             zoom /= zoom_speed
 
-        frame+=1
+        frame += 1
         image_cpu = mandelbrot_generator.generate_mandelbrot_image(zoom, MAX_ITERATIONS, offsetX, offsetY, frame)
         pygame.surfarray.blit_array(screen, image_cpu)
         pygame.display.flip()

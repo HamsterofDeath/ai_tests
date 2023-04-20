@@ -1,33 +1,38 @@
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
 public class MandelbrotGenerator extends JPanel implements Runnable {
     private static final int WIDTH = 800;
     private static final int HEIGHT = 800;
     private static final int MAX_ITERATIONS = 1000;
     private static final int NUM_THREADS = 16;
-
+    private final ExecutorService executor;
+    private final BlockingQueue<RowData> rowQueue;
     private BufferedImage image;
     private double zoom = 1;
     private double zoomSpeed = 1.01;
-
-    private final ExecutorService executor;
-    private final BlockingQueue<RowData> rowQueue;
 
     public MandelbrotGenerator() {
         image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
         executor = Executors.newFixedThreadPool(NUM_THREADS);
         rowQueue = new LinkedBlockingQueue<>();
         new Thread(this).start();
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Mandelbrot Set Generator");
+        MandelbrotGenerator generator = new MandelbrotGenerator();
+        frame.add(generator);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(new Dimension(WIDTH, HEIGHT));
+        frame.setResizable(false);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 
     @Override
@@ -107,17 +112,6 @@ public class MandelbrotGenerator extends JPanel implements Runnable {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawImage(image, 0, 0, this);
-    }
-
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Mandelbrot Set Generator");
-        MandelbrotGenerator generator = new MandelbrotGenerator();
-        frame.add(generator);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(new Dimension(WIDTH, HEIGHT));
-        frame.setResizable(false);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
     }
 }
 

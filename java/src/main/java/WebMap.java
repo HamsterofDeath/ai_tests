@@ -1,12 +1,13 @@
-import com.mongodb.client.MongoClients;
+import com.google.gson.Gson;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import org.bson.Document;
+
 import static com.mongodb.client.model.Filters.eq;
-import com.google.gson.Gson;
 import static spark.Spark.*;
 
 public class WebMap {

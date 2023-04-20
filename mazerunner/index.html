@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Maze Generator</title>
-    <link rel="stylesheet" href="styles.css">
+    <link href="styles.css" rel="stylesheet">
 </head>
 <body>
 <h1>Maze Generator</h1>
 <canvas id="mazeCanvas"></canvas>
 <br>
 <label for="mazeSize">Maze size:</label>
-<input type="number" id="mazeSize" value="10" min="2" max="100">
+<input id="mazeSize" max="100" min="2" type="number" value="10">
 <label for="appleCount">Apples:</label>
-<input type="number" id="appleCount" value="2" min="2" max="7">
+<input id="appleCount" max="7" min="2" type="number" value="2">
 <button id="generateMaze">Generate Maze</button>
 <button id="start">Start</button>
 

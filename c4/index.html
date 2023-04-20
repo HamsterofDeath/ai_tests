@@ -2,26 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Connect 4</title>
-    <link rel="stylesheet" href="styles.css">
+    <link href="styles.css" rel="stylesheet">
 </head>
 <body>
 <div class="game-container">
     <div id="board"></div>
-    <div id="popup" class="hidden">
+    <div class="hidden" id="popup">
         <div class="popup-content">
             <p id="popup-message"></p>
             <button id="popup-close">OK</button>
         </div>
     </div>
 </div>
-<div id="waiting-dialog" class="waiting-dialog" style="visibility: hidden; opacity: 0;">
+<div class="waiting-dialog" id="waiting-dialog" style="visibility: hidden; opacity: 0;">
     <div class="dialog-content">
         <h2>AI is thinking...</h2>
     </div>
 </div>
-
 
 
 <script src="script.js"></script>

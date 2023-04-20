@@ -2,7 +2,7 @@
 <module type="WEB_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python">
-      <configuration sdkName="Python 3.10 (fun_with_python)" />
+      <configuration sdkName="Python 3.11 (ai_tests)" />
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
@@ -13,7 +13,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="p5.js" level="application" />
     <orderEntry type="library" name="qrcodejs" level="application" />
-    <orderEntry type="library" name="Python 3.10 (fun_with_python) interpreter library" level="application" />
+    <orderEntry type="library" name="Python 3.11 (ai_tests) interpreter library" level="application" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="renderExternalDocumentation" value="true" />

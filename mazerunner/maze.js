@@ -50,13 +50,13 @@ function generateMaze(size, numberOfApples) {
 
     // Start with the top-left corner cell and mark it as visited
     maze[1][1].value = 0;
-    const frontierCells = [{ row: 1, col: 1 }];
+    const frontierCells = [{row: 1, col: 1}];
 
     const directions = [
-        { row: -2, col: 0 },
-        { row: 2, col: 0 },
-        { row: 0, col: -2 },
-        { row: 0, col: 2 },
+        {row: -2, col: 0},
+        {row: 2, col: 0},
+        {row: 0, col: -2},
+        {row: 0, col: 2},
     ];
 
     while (frontierCells.length > 0) {
@@ -132,7 +132,7 @@ function drawMaze() {
 }
 
 function animateDot() {
-    const startPosition = { row: 1, col: 1 };
+    const startPosition = {row: 1, col: 1};
     const apples = getApplesPositions(maze);
     const path = tsp(maze, startPosition, apples);
     animatePath(path);
@@ -143,7 +143,7 @@ function getApplesPositions(maze) {
     for (let row = 0; row < maze.length; row++) {
         for (let col = 0; col < maze[row].length; col++) {
             if (maze[row][col].value >= 2) {
-                apples.push({ row, col });
+                apples.push({row, col});
             }
         }
     }
@@ -156,7 +156,7 @@ class MinBinaryHeap {
     }
 
     add(element, priority) {
-        this.elements.push({ element, priority });
+        this.elements.push({element, priority});
         this.bubbleUp(this.elements.length - 1);
     }
 
@@ -320,10 +320,10 @@ function aStar(maze, start, end) {
         }
 
         const neighbors = [
-            { row: current.row - 1, col: current.col },
-            { row: current.row + 1, col: current.col },
-            { row: current.row, col: current.col - 1 },
-            { row: current.row, col: current.col + 1 },
+            {row: current.row - 1, col: current.col},
+            {row: current.row + 1, col: current.col},
+            {row: current.row, col: current.col - 1},
+            {row: current.row, col: current.col + 1},
         ];
 
         for (const neighbor of neighbors) {
