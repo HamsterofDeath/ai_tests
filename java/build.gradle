@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+    id 'scala' // Add the Scala plugin
 }
 
 group = 'org.example'
@@ -14,10 +14,17 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
 
     implementation 'com.sparkjava:spark-core:2.9.3'
-    implementation 'org.mongodb:mongodb-driver-sync:4.4.1'
+    implementation 'org.mongodb:mongodb-driver-sync:4.9.1'
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'ch.qos.logback:logback-classic:1.2.9'
     implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'com.typesafe.play:play-json_2.13:2.9.4'
+    implementation 'org.reactivemongo:reactivemongo_2.13:1.1.0-RC9'
+
+    // Add the necessary Scala dependencies
+    implementation 'org.scala-lang:scala-library:2.13.10'
+    implementation 'org.scala-lang:scala-reflect:2.13.10'
+    testImplementation 'org.scalatest:scalatest_2.13:3.2.10'
 }
 
 test {
