@@ -14,6 +14,8 @@
     <orderEntry type="library" name="p5.js" level="application" />
     <orderEntry type="library" name="qrcodejs" level="application" />
     <orderEntry type="library" name="Python 3.11 (ai_tests) interpreter library" level="application" />
+    <orderEntry type="library" name="three.js" level="application" />
+    <orderEntry type="library" name="p5.js" level="application" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="renderExternalDocumentation" value="true" />
