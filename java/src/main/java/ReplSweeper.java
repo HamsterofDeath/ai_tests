@@ -5,7 +5,7 @@ import java.util.Scanner;
 public class ReplSweeper {
     public static class SimpleMinesweeper {
         private enum CellStatus {
-            EMPTY, BOMB, MARKED
+            EMPTY, BOMB
         }
 
         private CellStatus[][] field;
@@ -13,6 +13,9 @@ public class ReplSweeper {
         private boolean[][] marked;
 
         public void newGame(int width, int height, int bombs) {
+            if(bombs > width * height) {
+                throw new IllegalArgumentException("The number of bombs cannot be more than the number of cells");
+            }
             this.field = new CellStatus[height][width];
             this.revealed = new boolean[height][width];
             this.marked = new boolean[height][width];
@@ -35,14 +38,14 @@ public class ReplSweeper {
 
         public void printGameState() {
             for (int i = 0; i < field.length; i++) {
-                for (int j = 0; j < field[0].length; j++) {
+                for (int j = 0; j < field[i].length; j++) {
                     if (revealed[i][j]) {
                         if (field[i][j] == CellStatus.BOMB) {
                             System.out.print("B ");
                         } else {
                             System.out.print(countAdjacentbombs(j, i) + " ");
                         }
-                    } else if (field[i][j] == CellStatus.MARKED) {
+                    } else if (marked[i][j]) {
                         System.out.print("F ");
                     } else {
                         System.out.print("* ");
@@ -56,7 +59,8 @@ public class ReplSweeper {
         private int countAdjacentbombs(int x, int y) {
             int count = 0;
             for (int i = Math.max(0, y - 1); i <= Math.min(field.length - 1, y + 1); i++) {
-                for (int j = Math.max(0, x - 1); j <= Math.min(field[0].length - 1, x + 1); j++) {
+                for (int j = Math.max(0, x - 1); j <= Math.min(field[i].length - 1, x + 1); j++) {
+                    if (i == y && j == x) continue; // Skip the current cell
                     if (field[i][j] == CellStatus.BOMB) {
                         count++;
                     }
@@ -82,14 +86,15 @@ public class ReplSweeper {
 
         public boolean checkWin() {
             for (int i = 0; i < field.length; i++) {
-                for (int j = 0; j < field[0].length; j++) {
-                    if (field[i][j] == CellStatus.BOMB && !marked[i][j]) {
-                        return false; // There's still a bomb that hasn't bombn revealed
+                for (int j = 0; j < field[i].length; j++) {
+                    if (field[i][j] == CellStatus.EMPTY && !revealed[i][j]) {
+                        return false; // There's still a non-bomb cell that hasn't been revealed
                     }
                 }
             }
-            return true; // All bombs have bombn revealed
+            return true; // All non-bomb cells have been revealed
         }
+
 
         public boolean checkLose(int x, int y) {
             return field[y][x] == CellStatus.BOMB && revealed[y][x]; // You lose if you reveal a bomb
