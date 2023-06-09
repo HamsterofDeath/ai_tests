@@ -86,8 +86,15 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(widget.title),
+        backgroundColor: Colors.grey[900],
+        title: Text(
+          widget.title,
+          style: TextStyle(
+            fontFamily: 'SciFiFont', // Use your custom sci-fi font here
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -102,26 +109,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               child: TextField(
-                  // readOnly attribute set to false to allow showing cursor
-                  readOnly: false,
-                  // showCursor attribute set to true to display the cursor
-                  showCursor: true,
-                  controller: _expressionController,
-                  textAlign: TextAlign.right,
-                  // Input formatter to allow only digits, parentheses, and arithmetic operators
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9().+\-*/]'))
-                  ],
-                  style: TextStyle(fontSize: 24),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  maxLines: 1,
-                  onChanged: (text) {
-                    _expression = text;
-                    _onButtonPress("");
-                  }),
+                readOnly: false,
+                showCursor: true,
+                controller: _expressionController,
+                textAlign: TextAlign.right,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9().+\-*/]'))
+                ],
+                style: TextStyle(fontSize: 24, fontFamily: 'SciFiFont'),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                maxLines: 1,
+                onChanged: (text) {
+                  _expression = text;
+                  _onButtonPress("");
+                },
+              ),
             ),
           ),
           Expanded(
@@ -138,7 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 readOnly: true,
                 controller: TextEditingController(text: _result),
                 textAlign: TextAlign.right,
-                style: TextStyle(fontSize: 24, color: Colors.grey),
+                style: TextStyle(fontSize: 24, color: Colors.grey, fontFamily: 'SciFiFont'),
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.zero,
@@ -147,50 +152,33 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          Divider(height: 1),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildButton('7'),
-              _buildButton('8'),
-              _buildButton('9'),
-              _buildButton('/'),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildButton('4'),
-              _buildButton('5'),
-              _buildButton('6'),
-              _buildButton('*'),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildButton('1'),
-              _buildButton('2'),
-              _buildButton('3'),
-              _buildButton('-'),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildButton('.'),
-              _buildButton('0'),
-              _buildButton('C'),
-              _buildButton('+'),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildButton('('),
-              _buildButton(')'),
-              _buildButton('.'),
-            ],
+          Expanded(
+            flex: 3,
+            child: GridView.count(
+              crossAxisCount: 4,
+              childAspectRatio: 1.2,
+              children: <Widget>[
+                _buildButton('7'),
+                _buildButton('8'),
+                _buildButton('9'),
+                _buildButton('/'),
+                _buildButton('4'),
+                _buildButton('5'),
+                _buildButton('6'),
+                _buildButton('*'),
+                _buildButton('1'),
+                _buildButton('2'),
+                _buildButton('3'),
+                _buildButton('-'),
+                _buildButton('.'),
+                _buildButton('0'),
+                _buildButton('C'),
+                _buildButton('+'),
+                _buildButton('('),
+                _buildButton(')'),
+                _buildButton('.'),
+              ],
+            ),
           ),
         ],
       ),
@@ -198,39 +186,24 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildButton(String buttonText) {
-    return Expanded(
-      child: Container(
-        width: double.infinity,
-        margin: EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle, // Circular shape
-          color: Colors.pink,
+    return Container(
+      margin: EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        gradient: LinearGradient(
+          colors: [Colors.blue, Colors.purple],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle, // Circular shape
-            color: Colors.pink,
-          ),
-          padding: EdgeInsets.all(20),
-          // Adjust padding to increase the size of the button
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle, // Circular shape
-              color: Colors.pink,
-            ),
-            padding: EdgeInsets.all(30),
-            // Adjust padding to increase the size of the button
-            child: TextButton(
-              onPressed: () => _onButtonPress(buttonText),
-              child: Text(
-                buttonText,
-                style: TextStyle(
-                  fontSize: 48,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+      ),
+      child: TextButton(
+        onPressed: () => _onButtonPress(buttonText),
+        child: Text(
+          buttonText,
+          style: TextStyle(
+            fontSize: 20,
+            color: Colors.white,
+            fontFamily: 'SciFiFont',
           ),
         ),
       ),
