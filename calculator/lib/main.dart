@@ -37,19 +37,40 @@ class _MyHomePageState extends State<MyHomePage> {
   String _expression = '';
   String _result = '';
 
+  // Create TextEditingController for the expression field
+  TextEditingController _expressionController = TextEditingController();
+
   void _onButtonPress(String buttonText) {
     setState(() {
       if (buttonText == 'C') {
         _expression = '';
         _result = '';
-      } else if (buttonText == '=') {
-        try {
-          _calculateResult();
-        } catch (e) {
-          _result = "Error";
-        }
+        _expressionController.text =
+            _expression; // Update the controller's text
+        _expressionController.selection = TextSelection.collapsed(offset: 0);
       } else {
-        _expression += buttonText;
+        // Handle the cursor position
+        int cursorPosition = _expressionController.selection.start;
+
+        // Check if the cursor position is valid
+        if (cursorPosition < 0 ||
+            cursorPosition > _expressionController.text.length) {
+          cursorPosition = _expressionController.text.length;
+        }
+
+        // Insert the character at the cursor position
+        final newText = _expressionController.text
+            .replaceRange(cursorPosition, cursorPosition, buttonText);
+        _expressionController.text = newText;
+        _expressionController.selection =
+            TextSelection.collapsed(offset: cursorPosition + buttonText.length);
+        _expression =
+            _expressionController.text; // Update the _expression variable
+      }
+      try {
+        _calculateResult();
+      } catch (e) {
+        _result = "Error";
       }
     });
   }
@@ -81,19 +102,26 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               child: TextField(
-                readOnly: true,
-                controller: TextEditingController(text: _expression),
-                textAlign: TextAlign.right,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9()+\-*/.]')),
-                ],
-                style: TextStyle(fontSize: 24),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                maxLines: 1,
-              ),
+                  // readOnly attribute set to false to allow showing cursor
+                  readOnly: false,
+                  // showCursor attribute set to true to display the cursor
+                  showCursor: true,
+                  controller: _expressionController,
+                  textAlign: TextAlign.right,
+                  // Input formatter to allow only digits, parentheses, and arithmetic operators
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9().+\-*/]'))
+                  ],
+                  style: TextStyle(fontSize: 24),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  maxLines: 1,
+                  onChanged: (text) {
+                    _expression = text;
+                    _onButtonPress("");
+                  }),
             ),
           ),
           Expanded(
@@ -161,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               _buildButton('('),
               _buildButton(')'),
-              _buildButton('='),
+              _buildButton('.'),
             ],
           ),
         ],
