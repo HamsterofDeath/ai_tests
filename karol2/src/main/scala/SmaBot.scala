@@ -214,10 +214,11 @@ object Logic {
   val befehle = ArrayBuffer.empty[Move]
 
   def getNextAction(distanceToNextBlock: Int): Move = {
-    if (befehle.nonEmpty) {
-      val befehlAusListe = befehle.head
+    val hatNochBefehleInDerListe = befehle.nonEmpty
+    if (hatNochBefehleInDerListe) {
+      val ersterBefehlAusListe = befehle.head
       befehle.remove(0)
-      return befehlAusListe
+      return ersterBefehlAusListe
     }
 
     if (distanceToNextBlock > 0) {
